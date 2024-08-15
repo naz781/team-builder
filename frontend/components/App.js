@@ -18,13 +18,21 @@ I love creating intuitive and visually appealing web interfaces."
 I enjoy bringing creativity and aesthetics to the digital world."
   },
 ]
-
+const initialValues = { fname: "", lname: "", bio: "" }
 export default function App() {
   const [members, setMembers] = useState(teamMembers)
   const [editing, setEditing] = useState(null)
+  const [values, setValues] = useState(initialValues)
   // ✨ Create a third state to track the values of the inputs
 
   useEffect(() => {
+    if (editing == null) {
+      setValues({initialValues})
+    }else{
+      const {fname,lname,bio} = members.find(m => m.id === editing)
+      setValues({fname,lname,bio})
+    }
+     
     // ✨ If the `editing` state changes from null to the number 2 (for example)
     // this means we need to populate the inputs of the form
     // with the data belonging to the member with id 2.
@@ -33,24 +41,38 @@ export default function App() {
   }, [editing])
 
   const onChange = evt => {
+    const {id, value}= evt.target
+    setValues(preValues=>({...preValues,[id]:value}))
     // ✨ This is the change handler for your text inputs and your textarea.
     // You can check `evt.target.id` to know which input changed
     // and then you can use `evt.target.value` to update the state of the form
   }
   const edit = id => {
+    setEditing(id)
     // ✨ Put this function inside a click handler for the <button>Edit</button>.
     // It should change the value of `editing` state to be the id of the member
     // whose Edit button was clicked
-  }
+  };
   const submitNewMember = () => {
+    const {fname, lname, bio} = values
+    const newMember = {id: getId(), fname, lname, bio}
+    setMembers([...members, newMember])
+    setValues(initialValues);
     // This takes the values of the form and constructs a new member object,
     // which is then concatenated at the end of the `members` state
   }
   const editExistingMember = () => {
+    setMembers(prevMembers => prevMembers.map(m => m.id === editing ? {...m, ...(values) } : m))
     // ✨ This takes the values of the form and replaces the data of the
     // member in the `members` state whose id matches the `editing` state
+    setEditing(null);
   }
   const onSubmit = evt => {
+    evt.preventDefault()
+    editing ? editExistingMember() : submitNewMember()
+
+    setValues(initialValues)
+
     // ✨ This is the submit handler for your form element.
     // It will call either `submitNewMember` or `editExistingMember`
     // depending on whether the `editing` state is null or has an id in it.
@@ -69,7 +91,7 @@ export default function App() {
                   <h4>{mem.fname} {mem.lname}</h4>
                   <p>{mem.bio}</p>
                 </div>
-                <button>Edit</button>
+                <button onClick={()=> edit(mem.id)}>Edit</button>
               </div>
             ))
           }
@@ -77,20 +99,20 @@ export default function App() {
       </div>
       <div id="membersForm">
         <h2>{editing ? 'Edit' : 'Add'} a Team Member</h2>
-        <form>
+        <form onSubmit={onSubmit}>
           <div>
             <label htmlFor="fname">First Name </label>
-            <input id="fname" type="text" placeholder="Type First Name" />
+            <input onChange={onChange}  value = {values.fname} id="fname" type="text" placeholder="Type First Name" />
           </div>
 
           <div>
             <label htmlFor="lname">Last Name </label>
-            <input id="lname" type="text" placeholder="Type Last Name" />
+            <input onChange={onChange} value={values.lname} id="lname" type="text" placeholder="Type Last Name" />
           </div>
 
           <div>
             <label htmlFor="bio">Bio </label>
-            <textarea id="bio" placeholder="Type Bio" />
+            <textarea onChange={onChange} value={values.bio} id="bio" placeholder="Type Bio" />
           </div>
 
           <div>
